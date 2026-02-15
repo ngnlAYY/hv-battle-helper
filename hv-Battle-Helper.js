@@ -4173,7 +4173,7 @@
     getDebuffTurns(statusName, monster, isSleep = false) {
       const effect = EFFECTS.includes(statusName) ? statusName : debuffMap[statusName];
       let effects = monster?.effectObj;
-      if (effects.length >= 5) {
+      if (Object.keys(effects || {}).length >= 5) {
         const monName = monster?.name || "Unknown";
         effects = hvBH?.monstersEffects?.[monName];
       }
