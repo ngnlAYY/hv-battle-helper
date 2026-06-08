@@ -2843,7 +2843,7 @@
 
   let current_selection = "";
 
-  function ShowDamage() {
+  function () {
     const damageTypeSortArray = [
       "fire",
       "cold",
@@ -3003,7 +3003,7 @@
     return rows[0].map((_, i) => (i < start ? "total" : rows.reduce((s, r) => s + (r[i] || 0), 0)));
   }
 
-  function ShowDamageIsk() {
+  function Isk() {
     let html = `
     <tr>
       <td></td>
@@ -5243,7 +5243,7 @@
       setBattle("monsterData", []);
       if (finishBattle) {
         if (!isIsekai) {
-          ShowDamage();
+          ShowDamageIsk();
         } else {
           ShowDamageIsk();
         }
