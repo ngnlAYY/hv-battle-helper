@@ -4532,7 +4532,8 @@
     timeRecorder(action, use);
 
     if (!isIsekai) {
-      combatRecorder(turnLog, action, use);
+      // combatRecorder(turnLog, action, use);
+      combatRecorder_isekai(turnLog, action, use);
     } else {
       combatRecorder_isekai(turnLog, action, use);
     }
