@@ -2,7 +2,7 @@
 // @name         HV 战斗助手
 // @namespace    battle-helper
 // @description  battle-helper
-// @version      1.3.3
+// @version      1.3.5
 // @author       Silvan009
 // @match        *://*.hentaiverse.org/*
 // @exclude      *hentaiverse.org/equip/*
@@ -2843,7 +2843,7 @@
 
   let current_selection = "";
 
-  function () {
+  function ShowDamage() {
     const damageTypeSortArray = [
       "fire",
       "cold",
@@ -3003,7 +3003,7 @@
     return rows[0].map((_, i) => (i < start ? "total" : rows.reduce((s, r) => s + (r[i] || 0), 0)));
   }
 
-  function Isk() {
+  function ShowDamageIsk() {
     let html = `
     <tr>
       <td></td>
@@ -4256,6 +4256,18 @@
       return reverse ? a.index > b.index : a.index < b.index;
     },
 
+    betterWithMana(a, b, reverse) {
+      if (!b) return true;
+
+      const hasManaA = a?.effectObj?.["Coalesced Mana"] || false;
+      const hasManaB = b?.effectObj?.["Coalesced Mana"] || false;
+
+      if (hasManaA && !hasManaB) return true;
+      if (!hasManaA && hasManaB) return false;
+
+      return reverse ? a.index > b.index : a.index < b.index;
+    },
+
     baseTarget(monsters) {
       let list = monsters.filter((m) => m.isAlive);
       if (list.length === 0) return null;
@@ -4281,6 +4293,9 @@
       let best = null;
       let bestScore = -1;
 
+      const fightingStyle = cfgBattle.fightingStyle;
+      const spells = spellsDamageObj[fightingStyle];
+
       for (const center of monsters) {
         if (!center.isAlive) continue;
         let { start, end } = this.getRange(center.index, range);
@@ -4304,9 +4319,22 @@
         }
 
         if (score < 1) continue;
-        if (score > bestScore || (score === bestScore && this.betterIndex(center, best, reverse))) {
-          bestScore = score;
-          best = center;
+
+        if (spells && range > 8) {
+          if (this.betterWithMana(center, best, reverse)) {
+            bestScore = score;
+            best = center;
+          }
+        } else if (spells && range > 3 && range < 9) {
+          if (score > bestScore || (score === bestScore && this.betterWithMana(center, best, reverse))) {
+            bestScore = score;
+            best = center;
+          }
+        } else {
+          if (score > bestScore || (score === bestScore && this.betterIndex(center, best, reverse))) {
+            bestScore = score;
+            best = center;
+          }
         }
       }
       return best;
@@ -4532,7 +4560,6 @@
     timeRecorder(action, use);
 
     if (!isIsekai) {
-      // combatRecorder(turnLog, action, use);
       combatRecorder_isekai(turnLog, action, use);
     } else {
       combatRecorder_isekai(turnLog, action, use);
