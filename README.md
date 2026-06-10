@@ -35,6 +35,7 @@
 | `mon_sp` | 整数 | 当前目标怪物的灵力值百分比 |
 | `allmon_curhp` | 整数 | 全部目标怪物的绝对生命值 |
 | `allmon_maxhp` | 整数 | 全部目标怪物的最大生命值 |
+| `allmon_ehp` | 整数 | 全部目标怪物的最大等效生命值 |
 | `allmon_hp` | 整数 | 全部目标怪物的生命值百分比 |
 | `isBoss` | 整数 (0/1) | 当前目标怪物是否为 Boss（0 表示不是 boss，1 表示 boss） |
 | `debuff_<debuffname>` | 整数 | 当前目标怪物身上特定增益/减益的剩余回合数（-1 表示无此效果）。例如：`debuff_Weakened`（虚弱） |
