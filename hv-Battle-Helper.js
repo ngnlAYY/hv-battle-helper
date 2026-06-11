@@ -104,6 +104,7 @@
     debuffs: {
       options: [
         { value: "Imperil", label: "Imperil", data: "tc3 sr so tl" },
+        { value: "Local Imperil", label: "Local Imperil", data: "tc3 sr so tl" },
         { value: "Weaken", label: "Weaken", data: "tc3 sr so tl" },
         { value: "Silence", label: "Silence", data: "tc3 sr so tl" },
         { value: "Sleep", label: "Sleep", data: "tc3 sr so tl" },
@@ -356,6 +357,32 @@
   <div><button id="add-attackmodule">单独配置攻击模式</button>
   <div id="attack-module-list" class="module-list"></div></div>
   <div>
+    <span>熟练:</span>
+    <input type="text" id="proficiencyInput" class="input-modern" placeholder="数值" value="800">
+    <span> MDB:</span>
+    <input type="text" id="mdbInput" class="input-modern" placeholder="MDB值" value="3888">
+    <span> EDB:</span>
+    <input type="text" id="edbInput" class="input-modern" placeholder="EDB值" value="388">
+    <span> 倍率:</span>
+    <input type="text" id="multiplierInput" class="input-modern" placeholder="倍率" value="1.0">
+    <span> DD环:</span>
+    <input type="text" id="hathInput" class="input-modern" placeholder="dd加成" value="0.5">
+    <span> TW:</span>
+    <input type="text" id="twInput" class="input-modern" placeholder="tw加成" value="0.1">
+  </div>
+  <div>
+    <span>怪兽数据库</span>
+    <button id="updateMonsterBtn" class="btn btn-primary">更新数据库</button>
+    <button id="deleteMonsterBtn" class="btn btn-danger">删除数据库</button>
+  </div>
+  <div>
+    <span>部分imp</span>
+    <span> 伤害系数:</span>
+    <input type="text" id="damageCoeffInput" class="input-modern" placeholder="例: 1.25" value="1.88"
+      style="width: 100px;">
+    <span>（开启部分imp需要更新怪兽数据库、填写法师数值、500级）</span>
+  </div>
+  <div>
     <label>
       <input type="checkbox" id="autoNextRound"> 跳过回合弹窗(新回合需要按M或点击继续按钮)
     </label>
@@ -525,6 +552,25 @@
         renderOptionUI(moduleEl, null);
       }
     }
+  });
+
+  document.getElementById("updateMonsterBtn").addEventListener("click", async function () {
+    const btn = this;
+    const originalText = btn.textContent;
+
+    btn.textContent = "更新中......";
+    btn.disabled = true;
+
+    try {
+      await MonsterDB.updateMonsterDB();
+    } finally {
+      btn.textContent = originalText;
+      btn.disabled = false;
+    }
+  });
+
+  document.getElementById("deleteMonsterBtn").addEventListener("click", function () {
+    localStorage.removeItem("MonsterDB_monsters");
   });
 
   document.getElementById("add-attackmodule").addEventListener("click", function () {
@@ -874,6 +920,7 @@
       #bh-cfg-textarea{width:100%;height:100px;resize:none;overflow-y:auto;padding:5px 5px;margin:10px 0 0 0;box-sizing:border-box}
       .settings-container{display:flex;flex-direction:column;align-items:flex-start!important;}
       .settings-container>div{display:flex;align-items:center;}
+      .input-modern { margin: 0 !important; width: 6ch; }
     `);
   }
 
@@ -3299,11 +3346,14 @@
   let lastActionTimestamp = Date.now();
   let lastLogTimestamp = Date.now();
   let log;
+  let delayReload;
   let timelog = {};
   let combatlog = {};
   let droplog = {};
   let actionCounts = {};
   let readyNext = 0;
+
+  let monsterCache = null;
   let regExp = {
     playerInfo: /(\w+) Lv\.(\d+)/,
     battleTypeLog: /Initializing (.*) \.\.\./,
@@ -3670,6 +3720,172 @@
     GM_setValue(BATTLE_KEY, JSON.stringify(data));
   }
 
+  const MonsterDB = {
+    loadMonsterStore() {
+      const STORAGE_KEY = "MonsterDB_monsters";
+      const json = localStorage.getItem(STORAGE_KEY);
+      return json ? JSON.parse(json) : {};
+    },
+
+    initMonsterCache() {
+      if (!monsterCache) {
+        const json = localStorage.getItem("MonsterDB_monsters");
+        const raw = json ? JSON.parse(json) : {};
+
+        monsterCache = {};
+        for (const id in raw) {
+          monsterCache[id] = raw[id];
+        }
+      }
+    },
+
+    saveMonsterStore(store) {
+      const STORAGE_KEY = "MonsterDB_monsters";
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+    },
+
+    getMonsterById(id) {
+      this.initMonsterCache();
+      return monsterCache[id] || null;
+    },
+
+    queryMonster(id) {
+      return this.getMonsterById(id);
+    },
+
+    async updateMonsterDB() {
+      const resp = await fetch("https://hv-monsterdb-data.skk.moe/persistent.json");
+      const data = await resp.json();
+
+      let store = this.loadMonsterStore();
+      let count = 0;
+
+      for (const monster of data) {
+        if (monster.plvl <= 1500) continue;
+
+        const slim = {
+          monsterId: monster.monsterId,
+          monsterClass: monster.monsterClass,
+          plvl: monster.plvl,
+          piercing: monster.piercing,
+          crushing: monster.crushing,
+          slashing: monster.slashing,
+          cold: monster.cold,
+          wind: monster.wind,
+          elec: monster.elec,
+          fire: monster.fire,
+          dark: monster.dark,
+          holy: monster.holy,
+          lastUpdate: monster.lastUpdate,
+        };
+
+        const existing = store[monster.monsterId];
+        if (existing) {
+          const oldTime = new Date(existing.lastUpdate);
+          const newTime = new Date(slim.lastUpdate);
+          if (newTime <= oldTime) continue;
+        }
+
+        store[monster.monsterId] = slim;
+        count++;
+      }
+
+      this.saveMonsterStore(store);
+
+      alert(`更新完成，处理了 ${count} 条数据`);
+    },
+
+    getAttributeScore(attr) {
+      const now = new Date();
+      const day = now.getUTCDay();
+
+      const attributeMap = {
+        0: "holy",
+        1: "dark",
+        2: "fire",
+        3: "cold",
+        4: "wind",
+        5: "all",
+        6: "elec",
+      };
+
+      if (day === 5) return 5;
+
+      if (attributeMap[day] === attr) return 10;
+
+      return 0;
+    },
+
+    stat_upgrade(mon_PL) {
+      if (mon_PL < 1300) return 17;
+      if (mon_PL >= 1300 && mon_PL < 1431) return 18;
+      if (mon_PL >= 1431 && mon_PL < 1560) return 19;
+      if (mon_PL >= 1560 && mon_PL < 1698) return 20;
+      if (mon_PL >= 1698 && mon_PL < 1839) return 21;
+      if (mon_PL >= 1839 && mon_PL < 1983) return 22;
+      if (mon_PL >= 1983 && mon_PL < 2100) return 23;
+      if (mon_PL >= 2100 && mon_PL < 2200) return 24;
+      if (mon_PL >= 2200) return 25;
+    },
+
+    scaled_stat(base_m, upgrade_m, level_m) {
+      return Math.floor(
+        0.01 * level_m * (base_m + Math.min(Math.max(base_m / 10, 6), 10) * upgrade_m) +
+          Math.pow(level_m, 1.076675) * 0.3325,
+      );
+    },
+
+    eff_HP(mon_ID, mon_HP, mon_HPNow, mon_LV, mon_imp) {
+      var player_prof_factor = (cfgBattle.proficiencyInput - 500) / 500;
+      var player_ELEM = cfgBattle.fightingStyle;
+
+      var mon_race_base = {
+        Arthropod: { STR: 80, DEX: 50, AGI: 70, END: 100, INT: 40, WIS: 40 },
+        Avion: { STR: 50, DEX: 80, AGI: 140, END: 40, INT: 60, WIS: 50 },
+        Beast: { STR: 80, DEX: 90, AGI: 90, END: 70, INT: 30, WIS: 20 },
+        Celestial: { STR: 50, DEX: 50, AGI: 100, END: 50, INT: 100, WIS: 80 },
+        Daimon: { STR: 90, DEX: 90, AGI: 80, END: 40, INT: 60, WIS: 50 },
+        Dragonkin: { STR: 100, DEX: 50, AGI: 30, END: 90, INT: 50, WIS: 60 },
+        Elemental: { STR: 30, DEX: 60, AGI: 60, END: 40, INT: 80, WIS: 120 },
+        Giant: { STR: 100, DEX: 80, AGI: 30, END: 120, INT: 20, WIS: 10 },
+        Humanoid: { STR: 50, DEX: 100, AGI: 80, END: 50, INT: 80, WIS: 70 },
+        Mechanoid: { STR: 100, DEX: 70, AGI: 40, END: 70, INT: 40, WIS: 30 },
+        Reptilian: { STR: 70, DEX: 100, AGI: 60, END: 80, INT: 60, WIS: 40 },
+        Sprite: { STR: 30, DEX: 120, AGI: 120, END: 20, INT: 70, WIS: 60 },
+        Undead: { STR: 100, DEX: 70, AGI: 40, END: 100, INT: 20, WIS: 20 },
+      };
+
+      var mon_MMI = 0.8;
+      var mon_EMI = 75;
+      var mon_data = this.queryMonster(mon_ID);
+
+      if (mon_data) {
+        var mon_class = mon_data.monsterClass;
+        var pri_uplv = this.stat_upgrade(mon_data.plvl);
+        var mon_END = this.scaled_stat(mon_race_base[mon_class].END, pri_uplv, mon_LV);
+        var mon_WIS = this.scaled_stat(mon_race_base[mon_class].WIS, pri_uplv, mon_LV);
+
+        var mon_HP0 = (100 + mon_LV * 10 + mon_END * 5) * Math.max(1, (mon_LV - 100) * 0.01) * 2 + 50;
+
+        var token_up = Math.min(Math.max(mon_HP / mon_HP0 - 1, 0), 1);
+        mon_MMI = 1 - (900 / (900 + mon_END + mon_WIS / 2)) * (1 - token_up / 5);
+        mon_EMI = mon_data[player_ELEM];
+      }
+
+      var factor_pow = Math.pow(player_prof_factor, 1.5);
+      var mon_EMI_score = this.getAttributeScore(player_ELEM);
+
+      if (mon_imp > 0) {
+        mon_MMI = mon_MMI * 0.5;
+        mon_EMI = Math.max(mon_EMI - 40, 0);
+      }
+
+      mon_EMI = mon_EMI - mon_EMI_score;
+      mon_EMI = mon_EMI > 0 ? Math.max(mon_EMI - 50 * factor_pow, 0) : mon_EMI;
+      return Math.floor(mon_HPNow / (1 - mon_MMI) / (1 - mon_EMI * 0.01));
+    },
+  };
+
   const BattleStatusUtils = {
     getVitals() {
       if (document.querySelector("#vbh")) {
@@ -3811,6 +4027,7 @@
       hvBH.spellCD = spellCooldowns;
       hvBH.itemCD = itemCooldowns;
     },
+
     getMonsters() {
       let monsters = [];
 
@@ -3823,9 +4040,12 @@
           name: "Unknown",
           type: "Normal",
           isBoss: false,
+          isImp: 0,
           mid: 0,
+          lv: 0,
           maxhp: 0,
           curhp: 0,
+          ehp: 0,
           hp: 0,
           mp: 0,
           sp: 0,
@@ -3858,6 +4078,7 @@
         monster.maxhp = hvBH.monsterData?.[index]?.maxhp ?? 300000;
         monster.curhp = (monster.hp * monster.maxhp) / 100;
         monster.mid = hvBH.monsterData?.[index]?.mid ?? 0;
+        monster.lv = hvBH.monsterData?.[index]?.level ?? 0;
 
         let monster_btm6 = monster_btm1.querySelector(".btm6");
         monster_btm6.querySelectorAll("img").forEach((effect) => {
@@ -3871,6 +4092,10 @@
         });
         monster.effCount = Object.keys(monster.effectObj).length;
 
+        let mon_imp = monster?.effectObj?.["Imperiled"] ?? 0;
+        monster.isImp = mon_imp;
+        monster.ehp = MonsterDB.eff_HP(monster.mid, monster.maxhp, monster.curhp, monster.lv, mon_imp);
+
         monsters.push(monster);
       });
 
@@ -3881,6 +4106,7 @@
       let maxIdx = -Infinity;
       let maxCurHp = -Infinity;
       let maxMaxHp = -Infinity;
+      let maxEHp = -Infinity;
       let maxHpPercentage = -Infinity;
 
       for (const m of monsters) {
@@ -3888,6 +4114,7 @@
           aliveMon++;
           maxCurHp = Math.max(maxCurHp, m.curhp || 0);
           maxMaxHp = Math.max(maxMaxHp, m.maxhp || 0);
+          maxEHp = Math.max(maxEHp, m.ehp || 0);
           maxHpPercentage = Math.max(maxHpPercentage, m.hp || 0);
           if (m.isBoss) aliveBoss++;
           if (m.index < minIdx) minIdx = m.index;
@@ -3906,6 +4133,7 @@
       hvBH.maxIdx = maxIdx;
       hvBH.maxCurHp = maxCurHp === -Infinity ? 0 : maxCurHp;
       hvBH.maxMaxHp = maxMaxHp === -Infinity ? 0 : maxMaxHp;
+      hvBH.maxEHp = maxEHp === -Infinity ? 0 : maxEHp;
       hvBH.maxHpPercentage = maxHpPercentage === -Infinity ? 0 : maxHpPercentage;
     },
 
@@ -4078,7 +4306,12 @@
 
       if (key == "allmon_curhp") return hvBH.maxCurHp;
       if (key == "allmon_maxhp") return hvBH.maxMaxHp;
+      if (key == "allmon_ehp") return hvBH.maxEHp;
       if (key == "allmon_hp") return hvBH.maxHpPercentage;
+      if (key == "T1D") return hvUtility.calculateMagicDamage("T1");
+      if (key == "T2D") return hvUtility.calculateMagicDamage("T2");
+      if (key == "T3D") return hvUtility.calculateMagicDamage("T3");
+      if (key == "T4D") return hvUtility.calculateMagicDamage("T4");
 
       if (curMon) {
         if (key == "mon_curhp") return curMon.curhp;
@@ -5243,6 +5476,14 @@
       hvBH.monsterData = getBattle("monsterData", []);
     }
 
+    if (delayReload) clearTimeout(delayReload);
+
+    if (!PauseBattle) {
+      delayReload = setTimeout(function () {
+        window.location.href = window.location;
+      }, 60 * 1000);
+    }
+
     let throttledPreProcessLog = Utils.throttle(preProcessLog, 200, true);
     let obs = new MutationObserver(throttledPreProcessLog);
     obs.observe(log.firstChild, {
@@ -5322,6 +5563,8 @@
       let finishBattle = document.querySelector('img[src$="finishbattle.png"]');
       if (hvBH.aliveMon <= 0) {
         if (cfgBattle.autoNextRound && btcp && !finishBattle) {
+          if (delayReload) clearTimeout(delayReload);
+
           PauseBattle = true;
           refreshPause();
 
@@ -5383,6 +5626,119 @@
     }
   }
 
+  const hvUtility = {
+    calculateMagicDamage(type = "T3") {
+      const multipliers = {
+        T1: 4.25,
+        T2: 5.85,
+        T3: 7.5,
+        T4: 0.73,
+      };
+
+      const base = multipliers[type] || multipliers.T3;
+      const multiplier = Number(cfgBattle.multiplierInput);
+      const mdb = Number(cfgBattle.mdbInput);
+      const edb = Number(cfgBattle.edbInput);
+      const hath = Number(cfgBattle.hathInput);
+      const tw = Number(cfgBattle.twInput);
+      const riddleTurns = ConditionsUtils.getBuffTurns("Blessing of the RiddleMaster");
+
+      var ponybuff = 1;
+
+      if (riddleTurns && riddleTurns > 3) {
+        ponybuff = 1.2;
+      }
+
+      return Math.floor(multiplier * base * mdb * (1 + edb / 100) * (1 + hath) * (1 + tw) * 1.25 * ponybuff);
+    },
+
+    CalculatePartialimp(monstersInput, impDamage) {
+      const monsters = monstersInput.map((m) => ({ ...m }));
+
+      const monsterCount = monsters.length;
+      const attackPlan = [];
+
+      const isTarget = (m) => m.isAlive && m.ehp > impDamage && m.isImp == 0;
+      const isNonTarget = (m) => m.isAlive && m.ehp <= impDamage && m.isImp == 0;
+
+      const hasUncoveredTarget = () => monsters.some(isTarget);
+
+      while (hasUncoveredTarget()) {
+        let bestPoint = -1;
+        let bestScore = -1;
+        let bestArea = [];
+
+        for (let i = 0; i < monsterCount; i++) {
+          const area = [i - 1, i, i + 1].filter((j) => j >= 0 && j < monsterCount);
+
+          let score = 0;
+          let containsUncoveredTarget = false;
+
+          area.forEach((j) => {
+            const m = monsters[j];
+            if (isTarget(m)) {
+              score += 3;
+              containsUncoveredTarget = true;
+            } else if (isNonTarget(m)) {
+              score += 1;
+            }
+          });
+
+          if (monsters[i].isAlive && containsUncoveredTarget && score > bestScore) {
+            bestScore = score;
+            bestPoint = i;
+            bestArea = area;
+          }
+        }
+
+        if (bestPoint === -1) break;
+
+        bestArea.forEach((j) => {
+          if (monsters[j].isAlive) {
+            monsters[j].isImp = 1;
+          }
+        });
+
+        attackPlan.push(monsters[bestPoint].index);
+      }
+
+      return attackPlan;
+    },
+
+    CalculateAllimp(monstersInput) {
+      const monsters = monstersInput.map((m) => ({ ...m }));
+      const n = monsters.length;
+      const result = [];
+
+      while (true) {
+        let index = monsters.findIndex((m) => m.isImp == 0 && m.isAlive);
+
+        if (index === -1) break;
+
+        let target = index + 1;
+        if (target >= n) target = n - 1;
+
+        while (target >= index && !monsters[target].isAlive) {
+          target--;
+        }
+
+        if (target < index) {
+          return [];
+        }
+
+        result.push(monsters[target].index);
+
+        for (let i = target - 1; i <= target + 1; i++) {
+          if (i >= 0 && i < n && monsters[i].isAlive) {
+            monsters[i].isImp = 1;
+          }
+        }
+      }
+
+      return result;
+    },
+  };
+
   const actionHandlers = {
     processModules(config, executor) {
       if (!config?.status || !config.modules) return false;
@@ -5441,6 +5797,12 @@
 
     handleDebuff(config) {
       return this.processModules(config, (moduleName, module) => {
+        let LocalImperil = false;
+        if (moduleName == "Local Imperil") {
+          moduleName = "Imperil";
+          LocalImperil = true;
+        }
+
         const cdInfo = ConditionsUtils.checkCD(moduleName);
         if (!cdInfo.canUse) return false;
         if (!ConditionsUtils.check(module.conditions)) return false;
@@ -5453,12 +5815,31 @@
         const isAllRange = module.selectRange ?? false;
         const reverse = module.selectOrder ?? false;
         const turnsLeft = module.turnsLeft ?? 0;
+        let target = false;
 
-        const target = selectMonsterUtils.selectMonster(range, moduleName, isAllRange, reverse, turnsLeft);
+        if (LocalImperil) {
+          const Selecttarget = this.LocalImperil();
+          target = hvBH.monsters[Selecttarget];
+        } else {
+          target = selectMonsterUtils.selectMonster(range, moduleName, isAllRange, reverse, turnsLeft);
+        }
 
         if (!target) return false;
         return ActionsUtils.spellAttack(moduleName, target);
       });
+    },
+
+    LocalImperil() {
+      var T3Damage = hvUtility.calculateMagicDamage("T3") * Number(cfgBattle.damageCoeffInput);
+      var resultPartialimp = hvUtility.CalculatePartialimp(hvBH.monsters, T3Damage);
+      var resultAllimp = hvUtility.CalculateAllimp(hvBH.monsters);
+      var Selecttarget = Math.min(...resultAllimp);
+
+      if (resultPartialimp.length < resultAllimp.length) {
+        Selecttarget = Math.min(...resultPartialimp);
+      }
+
+      return Selecttarget;
     },
 
     handleSpiritstance(config) {
