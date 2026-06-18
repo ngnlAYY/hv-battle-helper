@@ -13,12 +13,8 @@
 // @grant        GM_deleteValue
 // ==/UserScript==
 
-
-
-
 (() => {
   "use strict";
-
 
   const isIsekai = window.location.href.includes("/isekai/");
   const CONFIG_KEY = isIsekai ? "bh_isk_config" : "bh_config";
@@ -27,9 +23,7 @@
   const BATTLE_KEY = isIsekai ? "bh_isk_battle" : "bh_battle";
   const LOG_KEY = isIsekai ? "bh_isk_log" : "bh_log";
 
-
   const defaultOptions = [{ value: "default", label: "默认选项" }];
-
 
   const moduleConfigs = {
     spiritstance: {
@@ -120,7 +114,6 @@
         { value: "Confuse", label: "Confuse", data: "tc3 sr so tl" },
         { value: "Blind", label: "Blind", data: "tc3 sr so tl" },
         { value: "Immobilize", label: "Immobilize", data: "tc3 sr so tl" },
-
       ],
     },
     skills: {
@@ -168,11 +161,9 @@
     },
   };
 
-
   let pauseBtn;
   let PauseBattle = getBattle(PAUSE_KEY, false);
   function refreshPause() {
-
     if (delayReload) clearTimeout(delayReload);
 
     if (pauseBtn) {
@@ -188,24 +179,15 @@
     if (!PauseBattle) startBattle();
   }
 
-
-
-
-
-
   function renderBoxUI(Type = 1) {
-
     const settingHTML = `<button class="bh-setting" id="bh-setting">BH</button>`;
     const pauseHTML = `<button class="bh-pause" id="bh-pause"></button> <span id="bh-log-title"></span>`;
 
-
     const html = Type == 1 ? settingHTML : settingHTML + pauseHTML;
-
 
     const hvBHBox = document.createElement("div");
     hvBHBox.id = "bh-box";
     hvBHBox.innerHTML = html;
-
 
     document.body.appendChild(hvBHBox);
     document.getElementById("bh-setting").onclick = () => panel.classList.toggle("show");
@@ -221,7 +203,6 @@
       });
     }
   }
-
 
   const panel = document.body.appendChild(document.createElement("div"));
   panel.id = "bh-panel";
@@ -264,7 +245,6 @@
 
   panel.querySelector("#bh-close").onclick = () => panel.classList.remove("show");
 
-
   panel.querySelectorAll(".bh-nav div[data-tab]").forEach((b) => {
     b.onclick = () => {
       panel.querySelectorAll(".bh-nav div").forEach((x) => x.classList.remove("active"));
@@ -273,7 +253,6 @@
       document.getElementById("page-" + b.dataset.tab).style.display = "block";
     };
   });
-
 
   const condHTML = () => `
     <div class="cond">
@@ -305,8 +284,8 @@
         <input name="moduleStatus" type="checkbox" class="enable" checked>
         <select name="moduleType" class="type">
           ${options
-      .map((opt) => `<option value="${opt.value}" data-ui="${opt.data || 0}">${opt.label}</option>`)
-      .join("")}
+            .map((opt) => `<option value="${opt.value}" data-ui="${opt.data || 0}">${opt.label}</option>`)
+            .join("")}
         </select>
 
         <!-- 这里用于放动态 ui -->
@@ -354,7 +333,6 @@
 
       <button type="button" name="remove-attackmode">删除</button>
     </div>`;
-
 
   document.getElementById("page-home").innerHTML = `
   <div>战斗风格:
@@ -534,7 +512,6 @@
     <div><a href="https:
   `;
 
-
   panel.addEventListener("click", (e) => {
     const m = e.target.closest(".module"),
       g = e.target.closest(".group");
@@ -581,7 +558,6 @@
     }
   });
 
-
   document.getElementById("updateMonsterBtn").addEventListener("click", async function () {
     const btn = this;
     const originalText = btn.textContent;
@@ -597,16 +573,13 @@
     }
   });
 
-
   document.getElementById("deleteMonsterBtn").addEventListener("click", function () {
     localStorage.removeItem("MonsterDB_monsters");
   });
 
-
   document.getElementById("add-attackmodule").addEventListener("click", function () {
     const moduleList = document.getElementById("attack-module-list");
     moduleList.insertAdjacentHTML("beforeend", attackmodeHTML());
-
 
     const lastModule = moduleList.lastElementChild;
     const removeBtn = lastModule.querySelector('[name="remove-attackmode"]');
@@ -615,14 +588,11 @@
     });
   });
 
-
-
   function saveConfigs() {
     const PANEL = document.getElementById("bh-panel");
     const data = {};
 
     const getVal = (el) => (el.type === "checkbox" ? el.checked : el.value);
-
 
     PANEL.querySelectorAll("input[id], select[id], textarea[id]").forEach((el) => {
       if (el.disabled) return;
@@ -631,13 +601,11 @@
       data[el.id] = getVal(el);
     });
 
-
     data.attackModules = [...document.querySelectorAll(".attackmode-module")].map((m) => [
       m.querySelector('[name="dungeon"]')?.value ?? "",
       m.querySelector('[name="attack-mode"]')?.value ?? "",
       m.querySelector('[name="boss-priority"]')?.checked ?? false,
     ]);
-
 
     PANEL.querySelectorAll(".module-group").forEach((groupEl) => {
       const label = groupEl.querySelector("label[id]");
@@ -685,20 +653,17 @@
     GM_setValue(CONFIG_KEY, data);
   }
 
-
   function loadConfigs(data) {
     if (!data) return;
 
     const PANEL = document.getElementById("bh-panel");
     const setVal = (el, v) => (el.type === "checkbox" ? (el.checked = !!v) : (el.value = v));
 
-
     Object.entries(data).forEach(([id, value]) => {
       const el = PANEL.querySelector(`#${CSS.escape(id)}`);
       if (!el || el.disabled) return;
       setVal(el, value);
     });
-
 
     const attackList = document.getElementById("attack-module-list");
     attackList.innerHTML = "";
@@ -712,7 +677,6 @@
       el.querySelector('[name="boss-priority"]').checked = m[2];
       el.querySelector('[name="remove-attackmode"]').onclick = () => el.remove();
     });
-
 
     PANEL.querySelectorAll(".module-group").forEach((groupEl) => {
       const label = groupEl.querySelector("label[id]");
@@ -802,7 +766,6 @@
       .join("");
   }
 
-
   window.addEventListener("load", loadConfigs(GM_getValue(CONFIG_KEY)));
 
   document.getElementById("btn-save").onclick = () => {
@@ -813,10 +776,7 @@
   document.getElementById("btn-reset").onclick = () =>
     confirm("确定重置？") && (GM_deleteValue(CONFIG_KEY), location.reload());
 
-
-
   updateBackupList();
-
 
   document.getElementById("bh-cfg-save").addEventListener("click", () => {
     const name = document.getElementById("bh-cfg-name").value.trim();
@@ -832,7 +792,6 @@
     updateBackupList();
   });
 
-
   document.getElementById("bh-cfg-load").addEventListener("click", () => {
     const name = document.getElementById("bh-cfg-select").value;
     if (!name) return;
@@ -842,7 +801,6 @@
     alert("配置已加载");
     location.reload();
   });
-
 
   document.getElementById("bh-cfg-delete").addEventListener("click", () => {
     const name = document.getElementById("bh-cfg-select").value;
@@ -857,13 +815,11 @@
     updateBackupList();
   });
 
-
   document.getElementById("bh-cfg-export").addEventListener("click", () => {
     saveConfigs();
     const config = GM_getValue(CONFIG_KEY);
     document.getElementById("bh-cfg-textarea").value = JSON.stringify(config, null, 2);
   });
-
 
   document.getElementById("bh-cfg-import-btn").addEventListener("click", () => {
     const text = document.getElementById("bh-cfg-textarea").value.trim();
@@ -879,7 +835,6 @@
     }
   });
 
-
   function updateBackupList() {
     const select = document.getElementById("bh-cfg-select");
     select.innerHTML = "";
@@ -891,7 +846,6 @@
       select.appendChild(option);
     });
   }
-
 
   GM_addStyle(`
     #bh-box{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:10px;align-items: flex-end;}
@@ -974,15 +928,9 @@
     `);
   }
 
-
-
-
-
-
   const export_type = "all";
   const export_limit = 2;
   const stat_rows = ["Average", "Total", "Max", "Min"];
-
 
   const default_rows = 50;
   const aggregate_by_day = true;
@@ -992,13 +940,11 @@
   const default_results = ["Victory", "Flee"];
   const default_days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
-
   let table_columns = {
     Speed: [
       { column_name: "Timestamp", field: "timestamp", tooltip: "ignore_button" },
 
       { column_name: "Diff", field: "difficulty" },
-
 
       { column_name: "Rounds", field: "completed_rounds", tooltip: "log" },
       { column_name: "Time", field: "seconds", format: "time_string" },
@@ -1009,8 +955,6 @@
         bins: { 1: "color: #922099", 2: "color: #299ec4", 3: "color: #209928" },
         tooltip: "combat",
       },
-
-
     ],
     Details: [
       {
@@ -1022,7 +966,6 @@
       },
 
       { column_name: "Persona", field: "persona", tooltip: "equipped" },
-
     ],
     Money: [
       {
@@ -1045,10 +988,6 @@
         bins: { 1: "color: #922099", 2: "color: #299ec4", 3: "color: #209928" },
         units: "0",
       },
-
-
-
-
     ],
     Drops: [
       {
@@ -1066,12 +1005,8 @@
       { column_name: "FC", drops: "Festival Coupon" },
       { column_name: "Legs", drops: "Legendary", tooltip: "Equips", keyword: "Legendary" },
       { column_name: "Peer", drops: "Peerless", tooltip: "Equips", keyword: "Peerless" },
-
-
     ],
     "Usage Breakdown": [
-
-
       {
         column_name: "Spells",
         sum_usage: [
@@ -1100,9 +1035,7 @@
       { column_name: "Buff", sum_usage: ["Regen", "Arcane Focus", "Heartseeker"], tooltip: "sum_usage" },
       { column_name: "Heal", sum_usage: ["Full-Cure", "Cure"], tooltip: "sum_usage" },
 
-
       { column_name: "Gem", sum_usage: ["Spirit Gem", "Mana Gem", "Health Gem", "Mystic Gem"], tooltip: "sum_usage" },
-
 
       { column_name: "spark", field: "spark" },
       { column_name: "horse", field: "horse" },
@@ -1171,33 +1104,8 @@
         ],
         tooltip: "sum_difference",
       },
-
-
-
-
-
     ],
   };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
   const GodEquips = [
     ["Rapier", "Slaughter"],
@@ -1211,53 +1119,28 @@
     [["Savage", "Agile"], "Shadowdancer"],
     ["Shielding", "Plate", "Protection"],
     ["Power", "Slaughter"],
-
-
-
-
-
-
-
-
   ];
-
-
 
   let prices = JSON.parse(localStorage.getItem("hvbs_prices")) || {};
 
-
   let prices_isekai = JSON.parse(localStorage.getItem("hvbs_prices_isekai")) || {};
-
-
-
-
-
-
-
-
-
-
 
   class BattleStats {
     constructor(json_obj, detail) {
       if (json_obj) {
-
         for (let k in json_obj) {
           this[k] = json_obj[k];
         }
       } else {
-
         if (isIsekai) {
           this.isekai = true;
         }
-
 
         let playerInfo = getStorageAll(CONFIG_KEY);
         this.difficulty = playerInfo?.difficulty || "Unknown";
         this.persona = playerInfo?.persona || "Unknown";
         this.equip_set = playerInfo?.equip_set || [];
         this.level = +playerInfo?.level || 0;
-
 
         let bs_timeLog = detail.timelog;
         this.fighting_style = bs_timeLog["Fighting Style"] || "Unknown";
@@ -1269,7 +1152,6 @@
 
         this.spark = bs_timeLog.spark || 0;
         this.horse = bs_timeLog.horse || 0;
-
 
         var result_text = document.getElementById("btcp").innerText;
 
@@ -1308,7 +1190,6 @@
           this.rounds = 1;
         }
 
-
         if (result_text.includes("You are victorious!")) {
           this.result = "Victory";
         } else if (result_text.includes("You have been defeated!")) {
@@ -1334,7 +1215,6 @@
                 formatted_drops.Equips = entries[i][1];
               }
             } else if (Object.entries(entries[i][1]).length) {
-
               let sub_entries = Object.entries(entries[i][1]);
               for (let j = 0; j < sub_entries.length; j++) {
                 if (entries[i][0] == "proficiency") {
@@ -1348,7 +1228,6 @@
               }
             }
           } else {
-
             formatted_drops[entries[i][0]] = entries[i][1];
           }
         }
@@ -1414,7 +1293,6 @@
   };
 
   BattleStats.prototype.addSaveText = function () {
-
     let btcp = document.getElementById("btcp");
     if (btcp) {
       btcp.appendChild(document.createElement("br"));
@@ -1423,11 +1301,7 @@
     }
   };
 
-
-
-
   function addData(index, lower_bound, upper_bound, table_div, filters, arena_row = false) {
-
     getTableParent().children[1].classList.add("hbs-querying");
     let stats = [];
     let request = self.indexedDB.open("Battle Stats");
@@ -1528,13 +1402,11 @@
     let startDate = null,
       endDate = null;
 
-
     if (/^\d{4}-\d{2}-\d{2}\/\d{4}-\d{2}-\d{2}$/.test(input2val)) {
       let [startStr, endStr] = input2val.split("/");
       startDate = new Date(startStr + "T00:00:00Z");
       endDate = new Date(endStr + "T00:00:00Z");
     } else if (/^\d{4}-\d{2}-\d{2}$/.test(input2val)) {
-
       startDate = new Date(input2val + "T00:00:00Z");
       endDate = new Date(input2val + "T00:00:00Z");
     }
@@ -1546,21 +1418,6 @@
       }
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     return data;
   }
 
@@ -1569,7 +1426,6 @@
       data.completed_rounds = data.rounds;
     }
 
-
     if (data.battle_type === "GF") {
       data.stamina = 1 + (data.completed_rounds || data.rounds) / 50;
     } else if (data.battle_type === "Arena") {
@@ -1577,10 +1433,8 @@
     } else if (data.battle_type === "IW") {
       data.stamina = data.rounds / 50;
     } else {
-
       data.stamina = 0;
     }
-
 
     if (data.battle_type === "RoB" && !("rob_level" in data)) {
       data.rob_level = 0;
@@ -1592,13 +1446,11 @@
       data.isekai = "Isekai";
     }
 
-
     if (!document.prices_updated) {
       let bs_prices = JSON.parse(localStorage.getItem("bs_prices"));
       if (bs_prices) {
         for (let item in prices) {
           if (item in bs_prices) {
-
             prices[item] = bs_prices[item];
           } else {
             console.log("Couldn't find " + item + ": " + prices[item]);
@@ -1609,7 +1461,6 @@
       }
       document.prices_updated = true;
     }
-
 
     data.revenue = calculateRevenue(data);
     data.cost = calculateCost(data);
@@ -1624,7 +1475,6 @@
 
     if (battle_stat.drops.Credit) {
       value += battle_stat.drops.Credit;
-
     }
 
     if (battle_stat.battle_type == "Arena") {
@@ -1656,22 +1506,16 @@
       }
     }
 
-
-
     for (let drop in prices) {
       if (battle_stat.drops[drop]) {
         if (drop == "Equipment") {
-
           value += battle_stat.drops.Equipment * prices.Equipment[battle_stat.difficulty];
-
         } else if (battle_stat.isekai === "Isekai") {
-
           if (!!prices_isekai[drop] || prices_isekai[drop] === 0)
             value += battle_stat.drops[drop] * prices_isekai[drop];
           else console.log(drop + ":No price");
         } else {
           value += battle_stat.drops[drop] * prices[drop];
-
         }
       }
     }
@@ -1682,8 +1526,6 @@
     let value = 0;
 
     value += prices.Stamina * battle_stat.stamina;
-
-
 
     if (battle_stat.battle_type == "RoB") {
       if (battle_stat.rob_level == 0) {
@@ -1697,16 +1539,12 @@
       } else if (battle_stat.rob_level == 7) {
         value += 10 * prices.Blood;
       }
-
     }
-
 
     for (let usage in prices) {
       if (battle_stat.combat.used[usage]) {
         value +=
           battle_stat.combat.used[usage] * (battle_stat.isekai === "Isekai" ? prices_isekai[usage] : prices[usage]);
-
-
       }
     }
 
@@ -1714,7 +1552,6 @@
   }
 
   function generateAggregate(data_array, type, timestamp_name = null) {
-
     if (data_array.length === 0) {
       return false;
     } else {
@@ -1784,7 +1621,6 @@
           if (typeof data_drops[j][1] == "number") {
             drops[data_drops[j][0]] = (drops[data_drops[j][0]] || 0) + (data_drops[j][1] || 0);
           } else {
-
             for (let equip in data_drops[j][1]) {
               drops[data_drops[j][0]][equip] = (drops[data_drops[j][0]][equip] || 0) + data_drops[j][1][equip];
             }
@@ -1838,8 +1674,6 @@
 
       new_data.agg = true;
 
-
-
       return new_data;
     }
   }
@@ -1861,7 +1695,6 @@
   function getRecursiveMin(a, b, index) {
     for (let key in b) {
       if (key === "Equips") {
-
       } else if (typeof b[key] === "number") {
         a[key] = a[key] === undefined ? (index === 0 ? b[key] : 0) : a[key] > b[key] ? b[key] : a[key];
       } else if (typeof b[key] === "object") {
@@ -1881,7 +1714,6 @@
   function getRecursiveMax(a, b) {
     for (let key in b) {
       if (key === "Equips") {
-
       } else if (typeof b[key] === "number") {
         a[key] = a[key] === undefined || a[key] < b[key] ? b[key] : a[key];
       } else if (typeof b[key] === "object") {
@@ -1898,9 +1730,6 @@
     return a;
   }
 
-
-
-
   function addPageUI() {
     let url = window.location.href;
     if (url.includes("hentaiverse.org/battle_stats") || url.includes("hentaiverse.org/isekai/battle_stats")) {
@@ -1915,14 +1744,11 @@
 
       document.body.replaceChildren(newBody);
 
-
       let menu = generateMenuItems("hbs-menu");
       newBody.appendChild(menu);
 
-
       let filters = createFilters();
       newBody.append(filters);
-
 
       let tableParent = getTableParent();
       newBody.appendChild(tableParent);
@@ -1934,12 +1760,9 @@
   function addMenuIntegration(parent_name = "bh-box") {
     let nav_bar = document.getElementById(parent_name);
     if (nav_bar) {
-
-
       addSharedCSS();
       addMenuCSS();
       addTableCSS();
-
 
       let bs_menu = document.createElement("div");
       bs_menu.classList.add("hbs_menu");
@@ -1953,20 +1776,16 @@
       bs_menu.appendChild(title_span);
       bs_menu.appendChild(menu_list);
 
-
       if (nav_bar) {
         let userMenu = document.getElementById("bh-setting");
         userMenu.after(bs_menu);
-
       }
 
       addUIListeners();
 
-
       let container = getMainContainer();
 
       document.body.appendChild(container);
-
 
       if (!log && document.URL.includes("?s=Battle&ss=ar")) {
         modifyArenaRows("Arena");
@@ -2139,22 +1958,6 @@
     });
 
     if (!isIsekai) {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
       let staminaPrice = (latestPriceData["Energy Drink"] || 0) / 10;
       latestPriceData.Stamina = staminaPrice;
       latestPriceData["Energy Drink"] = 0;
@@ -2191,7 +1994,6 @@
         parseMarketData();
       });
 
-
       const viewBtn = document.createElement("button");
       viewBtn.innerText = "View Price";
       viewBtn.addEventListener("click", function () {
@@ -2208,11 +2010,9 @@
         localStorage.removeItem("hvbs_prices");
         localStorage.removeItem("hvbs_prices_isekai");
 
-
         alert("❌ 已清空所有存储的价格！");
         location.reload();
       });
-
 
       buttonsContainer.appendChild(exit);
       if (!log) {
@@ -2286,7 +2086,6 @@
   function addUIListeners() {
     document.addEventListener("click", function (event) {
       if (event.target.classList.contains("hbs-list-table-link")) {
-
         event.preventDefault();
         current_selection = event.target.dataset.type;
         if (event.target.dataset.menu) {
@@ -2310,7 +2109,6 @@
 
       let table = generateTable();
       tableParent.appendChild(table);
-
 
       let filters = getFilters();
 
@@ -2340,9 +2138,6 @@
       addData(index, lower_bound, upper_bound, table, filters);
     }
   }
-
-
-
 
   function getTableParent(title = "") {
     let parent = document.getElementById("hbs_table_parent");
@@ -2394,7 +2189,6 @@
           grouping_row.append(grouping_header);
         }
       }
-
 
       let header_row = table_header.insertRow(-1);
       header_row.classList.add("header_row");
@@ -2483,7 +2277,6 @@
       }
       if ("bins" in columns[j]) {
         for (let bin_value in columns[j].bins) {
-
           if (bin_value == 1 || bin_value == 2 || bin_value == 3) {
             let avg_value = 0;
             if ("field" in columns[j]) {
@@ -2492,7 +2285,6 @@
               avg_value = Average_data.drops[columns[j].drops];
             }
             if (!!avg_value) {
-
               if (parseFloat(cell_content) < avg_value && bin_value == 1) {
                 table_cell.style.cssText = columns[j].bins[bin_value];
               } else if (parseFloat(cell_content) == avg_value && bin_value == 2) {
@@ -2511,7 +2303,6 @@
       if ("units" in columns[j]) {
         let num_cell_content = Number(cell_content);
         if (!isNaN(num_cell_content)) {
-
           let sign = num_cell_content < 0 ? "-" : "";
           let absNum = Math.abs(num_cell_content);
           if (absNum >= 1e9) {
@@ -2552,7 +2343,6 @@
   }
 
   function addTooltip(cell, data, col) {
-
     let holder = [];
     if (col.tooltip === "Equips") {
       for (let key in data.drops.Equips) {
@@ -2561,7 +2351,6 @@
         }
       }
     } else if (col.tooltip === "log" && data.log) {
-
       let log_arr = data.log.split("\n");
       for (let i = 1; i < log_arr.length; i++) {
         if (!log_arr[i]) holder.push("----------");
@@ -2610,7 +2399,6 @@
         const obj = data.combat[group.key];
         if (!obj) return;
 
-
         holder.push(`【 ${group.title} 】`);
 
         for (let k in obj) {
@@ -2619,7 +2407,6 @@
           }
         }
 
-
         if (index !== groups.length - 1) {
           holder.push("--------------------");
         }
@@ -2627,24 +2414,18 @@
     } else if (col.tooltip === "drops" && data.drops) {
       const excludeKeys = new Set(["Equips", "EXP", "Consumable", "Food", "Artifact", "Figurine", "Trophy"]);
 
-
       holder.push("【 Drops 】");
 
       for (let key in data.drops) {
-
         if (excludeKeys.has(key)) continue;
 
         const val = data.drops[key];
 
-
         if (val === 0 || val === null || val === undefined) continue;
-
 
         if (Array.isArray(val) && val.length === 0) continue;
 
-
         if (typeof val === "object" && key === "Equips") continue;
-
 
         holder.push(`${key}: ${val}`);
       }
@@ -2704,7 +2485,6 @@
   }
 
   function getColumns() {
-
     if (!document.hbs_columns) {
       let bs_columns = JSON.parse(localStorage.getItem("bs_columns"));
       if (bs_columns) {
@@ -2717,7 +2497,6 @@
   }
 
   function getTimeString(time) {
-
     if (!time) {
       return "NA";
     }
@@ -2743,8 +2522,6 @@
     new_stat.ignore = checked;
     new_stat.saveToDB();
   }
-
-
 
   function getFilters() {
     let filters = {};
@@ -2787,7 +2564,6 @@
     if (!filter_div) {
       filter_div = document.createElement("div");
       filter_div.id = "hbs_filters";
-
 
       filter_div.append(createCheckBoxes(["Aggregate by Day"], "hbs_filter_aggregate", aggregate_by_day));
       filter_div.append(
@@ -2887,7 +2663,6 @@
         input.step = "1";
         input.style.width = "60px";
       } else {
-
         input.type = "text";
         input.placeholder = "YYYY-MM-DD/YYYY-MM-DD";
         input.style.width = "180px";
@@ -2897,20 +2672,12 @@
         startQuery();
       });
 
-
-
       wrapper.append(document.createTextNode(text_array[i]));
       wrapper.append(input);
       wrapper.classList.add(id + (i + 1));
 
       parent.append(wrapper);
     }
-
-
-
-
-
-
 
     return parent;
   }
@@ -2974,9 +2741,6 @@
     parent.id = id;
     return parent;
   }
-
-
-
 
   function createDB() {
     let request = self.indexedDB.open("Battle Stats", 1);
@@ -3049,7 +2813,6 @@
   }
 
   function importDB(data_string) {
-
     let data = JSON.parse(data_string);
     for (let i = 0; i < data.length; i++) {
       let battle_stat = new BattleStats(data[i]);
@@ -3078,9 +2841,6 @@
     }
   }
 
-
-
-
   function addPageCSS() {
     GM_addStyle("body {background: #E3E0D1; font-size: 10pt;}");
     GM_addStyle("#hbs-main {margin: auto;text-align: center;}");
@@ -3091,7 +2851,6 @@
   }
 
   function addMenuCSS() {
-
     GM_addStyle(
       "#hbs_container {position: absolute; visibility: hidden; top: 35px; left:25px; width: 1130px; height: 630px; overflow-y: auto; background-color: #E3E0D1; color: black; text-align: center; padding: 10px 30px 10px 30px; border-radius: 6px; font-size: 8pt;}",
     );
@@ -3100,7 +2859,6 @@
     );
     GM_addStyle(".hbs-buttons-container button {width: 120px;}");
     GM_addStyle(".hbs-table {font-size: 8pt}");
-
 
     GM_addStyle(".hbs_menu ul {list-style: none; padding: 0; line-height: 18px;}");
     GM_addStyle(".hbs_menu a {margin: 5px 0; padding: 0 5px;}");
@@ -3113,17 +2871,14 @@
   }
 
   function addTableCSS() {
-
     GM_addStyle(".hbs-table-title {font-size: 20pt;}");
     GM_addStyle(".hbs-table {margin-left: auto; margin-right: auto; white-space: nowrap;text-align: center}");
     GM_addStyle(".hbs-table td, table.hbs_table th {padding: 0px 5px 0 5px}");
     GM_addStyle(".hbs-table tr.grouping_row th {border-left: 1px solid black; border-right: 1px solid black;}");
     GM_addStyle(".last_agg_row td { border-bottom: 1px solid #000; }");
 
-
     GM_addStyle("#hbs_query_span {display: none}");
     GM_addStyle("#hbs_query_span[class='hbs-querying'] {display: unset; font-size: 16pt;}");
-
 
     GM_addStyle(".hbs-tooltip-parent {position: relative; border-bottom: 1px dashed black;}");
     GM_addStyle(".hbs-tooltip-parent:hover {background: #d9d6ca}");
@@ -3133,20 +2888,11 @@
     );
   }
 
-
-
-
-
   createDB();
-
-
 
   addPageUI();
 
   let current_selection = "";
-
-
-
 
   function ShowDamage() {
     const damageTypeSortArray = [
@@ -3197,9 +2943,7 @@
             </tr>
         `;
 
-
     for (let damageTypeSort of damageTypeSortArray) {
-
       let damageTypeArray = [
         damageTypeSort,
         combatlog.physicalDealt[damageTypeSort] ?? 0,
@@ -3210,46 +2954,36 @@
         combatlog.magicalTaken[damageTypeSort] ?? 0,
         combatlog.magicalTaken["spiritShield" + damageTypeSort] ?? 0,
         (combatlog.physicalTaken[damageTypeSort] ?? 0) +
-        (combatlog.physicalTaken["spiritShield" + damageTypeSort] ?? 0) +
-        (combatlog.magicalTaken[damageTypeSort] ?? 0) +
-        (combatlog.magicalTaken["spiritShield" + damageTypeSort] ?? 0),
+          (combatlog.physicalTaken["spiritShield" + damageTypeSort] ?? 0) +
+          (combatlog.magicalTaken[damageTypeSort] ?? 0) +
+          (combatlog.magicalTaken["spiritShield" + damageTypeSort] ?? 0),
       ];
-
 
       damageTypeTotalArray.push(damageTypeArray);
 
-
       combatlogTBodyInnerHTML += "<tr>";
-
 
       for (let i = 0; i < damageTypeArray.length; i++) {
         combatlogTBodyInnerHTML += `<td>${(damageTypeArray[i] || "").toLocaleString()}</td>`;
       }
 
-
       combatlogTBodyInnerHTML += "</tr>";
     }
 
-
     combatlogTBodyInnerHTML += '<tr style="border: 1px solid;"><td>total</td>';
-
 
     for (let i = 1; i < damageTypeTotalArray[0].length; i++) {
       let damageTypeTotal = 0;
-
 
       for (let j = 0; j < damageTypeTotalArray.length; j++) {
         damageTypeTotal += damageTypeTotalArray[j][i];
       }
 
-
       combatlogTBodyInnerHTML += `<td>${(damageTypeTotal || "").toLocaleString()}</td>`;
     }
     combatlogTBodyInnerHTML += "</tr>";
 
-
     for (let resultTypeSort of resultTypeSortArray) {
-
       let resultTypeArray = [
         resultTypeSort,
         combatlog.physicalDealt[resultTypeSort] ?? 0,
@@ -3262,38 +2996,29 @@
         (combatlog.physicalTaken[resultTypeSort] ?? 0) + (combatlog.magicalTaken[resultTypeSort] ?? 0),
       ];
 
-
       resultTypeTotalArray.push(resultTypeArray);
 
-
       combatlogTBodyInnerHTML += "<tr>";
-
 
       for (let i = 0; i < resultTypeArray.length; i++) {
         combatlogTBodyInnerHTML += `<td>${(resultTypeArray[i] || "").toLocaleString()}</td>`;
       }
 
-
       combatlogTBodyInnerHTML += "</tr>";
     }
 
-
     combatlogTBodyInnerHTML += '<tr style="border: 1px solid;"><td>total</td>';
-
 
     for (let i = 1; i < resultTypeTotalArray[0].length; i++) {
       let resultTypeTotal = 0;
-
 
       for (let j = 0; j < resultTypeTotalArray.length; j++) {
         resultTypeTotal += resultTypeTotalArray[j][i];
       }
 
-
       combatlogTBodyInnerHTML += `<td>${(resultTypeTotal || "").toLocaleString()}</td>`;
     }
     combatlogTBodyInnerHTML += "</tr>";
-
 
     const damagelog = log.parentNode.insertBefore(document.createElement("table"), log);
     damagelog.id = "damagelog";
@@ -3348,7 +3073,6 @@
     </tr>
   `;
 
-
     const damageRows = damageTypeSortArray_isekai.map((type) =>
       buildRow(
         type,
@@ -3362,7 +3086,6 @@
 
     damageRows.forEach((r) => (html += tr(r)));
     html += `<tr style="border:2px solid #5C0E13;">${sumColumns(damageRows).map(td).join("")}</tr>`;
-
 
     const resultRows = resultTypeSortArray_isekai.map((type) =>
       buildRow(
@@ -3380,7 +3103,6 @@
     resultTotal[4] -= get(combatlog.physicalTaken, "blockAndParry");
     html += `<tr style="border:2px solid #5C0E13;">${resultTotal.map(td).join("")}</tr>`;
 
-
     resultTypePartiallySortArray_isekai.forEach((type) => {
       html += tr(
         buildRow(
@@ -3392,7 +3114,6 @@
         ),
       );
     });
-
 
     html += `
     <tr style="border:2px solid #5C0E13;">
@@ -3424,7 +3145,6 @@
       html += `<tr>${row.map(td).join("")}<td colspan="4"></td></tr>`;
     }
 
-
     const damagelog = log.parentNode.insertBefore(document.createElement("table"), log);
     damagelog.id = "damagelog";
     damagelog.innerHTML = html;
@@ -3448,7 +3168,6 @@
   }
 
   function ShowDrops() {
-
     let btcp = document.getElementById("btcp");
 
     const cfg = {
@@ -3477,7 +3196,6 @@
       console.log(JSON.stringify(droplog));
     }
 
-
     const sep = () => (cfg.terseLog ? "\t" : " ");
 
     function addLine(className, html) {
@@ -3500,7 +3218,6 @@
       }
     }
 
-
     if (droplog.Crystal) {
       renderSimple("Crystal", "drop crystal", "Crystal");
       if (cfg.detailedCrystlog) {
@@ -3508,9 +3225,7 @@
       }
     }
 
-
     renderSimple("Credit", "drop credit", "Credit");
-
 
     const EQUIPMENT_TIERS = [
       "Peerless",
@@ -3556,12 +3271,11 @@
       addLine(
         "drop equipment",
         lesserCount.toLocaleString() +
-        (cfg.terseLog ? "\t" : "x ") +
-        (cfg.equipmentCutoff > 0 ? "Lesser " : "") +
-        "Equipment",
+          (cfg.terseLog ? "\t" : "x ") +
+          (cfg.equipmentCutoff > 0 ? "Lesser " : "") +
+          "Equipment",
       );
     }
-
 
     if (cfg.detailedDroplog) {
       renderMap(droplog.Mats, "drop equipment");
@@ -3569,13 +3283,11 @@
       renderSimple("Material", "drop equipment", "Material");
     }
 
-
     [
       ["Chaos", "Chaos Token"],
       ["Blood", "Token of Blood"],
       ["Soul", "Soul Fragment"],
     ].forEach(([k, label]) => renderSimple(k, "drop token", label));
-
 
     if (cfg.detailedDroplog) {
       renderMap(droplog.Artifacts, "drop artifact");
@@ -3591,16 +3303,13 @@
       renderSimple("Food", "drop food", "Food");
     }
 
-
     renderSimple("EXP", "drop", "EXP", "");
-
 
     if (cfg.trackProficiency && droplog.proficiency) {
       for (const p in droplog.proficiency) {
         addLine("drop", droplog.proficiency[p].toFixed(3) + sep() + p);
       }
     }
-
 
     if (cfg.trackSpeed && timelog.action && timelog.startTime) {
       btcp.appendChild(document.createElement("br"));
@@ -3616,25 +3325,22 @@
       addLine(
         "speed",
         timelog.action.toLocaleString() +
-        " turns  " +
-        h +
-        ":" +
-        (m < 10 ? "0" : "") +
-        m +
-        ":" +
-        (s < 10 ? "0" : "") +
-        s +
-        "  (" +
-        tps.toLocaleString() +
-        " t/s)" +
-        (timelog.spark ? "  " + timelog.spark + " spark" : "") +
-        (timelog.horse ? "  " + timelog.horse + " horse" : ""),
+          " turns  " +
+          h +
+          ":" +
+          (m < 10 ? "0" : "") +
+          m +
+          ":" +
+          (s < 10 ? "0" : "") +
+          s +
+          "  (" +
+          tps.toLocaleString() +
+          " t/s)" +
+          (timelog.spark ? "  " + timelog.spark + " spark" : "") +
+          (timelog.horse ? "  " + timelog.horse + " horse" : ""),
       );
     }
   }
-
-
-
 
   const cfgBattle = GM_getValue(CONFIG_KEY);
   let hvBH = JSON.parse(GM_getValue(BATTLE_KEY) || "{}");
@@ -3706,7 +3412,6 @@
     physicalTakenParry: /(>You parry| uses [^<>]+parry the attack\.)/g,
     physicalTakenBlock: /(>You block| uses [^<>]+block the attack\.)/g,
 
-
     damage_isekai: /[^<>]+damage/g,
     damageTaken1_isekai: /(?<v>glances|hits|crits) you.*?(?<n>\d+).*?(?<t>\w+) damage/,
     damageTaken2_isekai: /which (?<v>glances|hits|crits).*?(?<n>\d+).*?(?<t>\w+) damage/,
@@ -3750,7 +3455,6 @@
     physicalTakenBlockPartially_isekai:
       /(?:(?:uses[^<>]+|>)You|you) partially block (?:and|partially|parry| )*the attack/g,
     physicalTakenBlock_isekai: /(?<!partially )block (?:and|partially|parry| )*the attack/g,
-
 
     gainExp: /gain (\d+) EXP/,
     gainCredit: /gain (\d+) Credit/,
@@ -4021,19 +3725,16 @@
   }
 
   const MonsterDB = {
-
     loadMonsterStore() {
       const STORAGE_KEY = "MonsterDB_monsters";
       const json = localStorage.getItem(STORAGE_KEY);
       return json ? JSON.parse(json) : {};
     },
 
-
     initMonsterCache() {
       if (!monsterCache) {
         const json = localStorage.getItem("MonsterDB_monsters");
         const raw = json ? JSON.parse(json) : {};
-
 
         monsterCache = {};
         for (const id in raw) {
@@ -4042,27 +3743,21 @@
       }
     },
 
-
     saveMonsterStore(store) {
       const STORAGE_KEY = "MonsterDB_monsters";
       localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
     },
-
 
     getMonsterById(id) {
       this.initMonsterCache();
       return monsterCache[id] || null;
     },
 
-
     queryMonster(id) {
       return this.getMonsterById(id);
     },
 
-
     async updateMonsterDB() {
-
-
       const resp = await fetch("https://hv-monsterdb-data.skk.moe/persistent.json");
       const data = await resp.json();
 
@@ -4118,7 +3813,6 @@
         6: "elec",
       };
 
-
       if (day === 5) return 5;
 
       if (attributeMap[day] === attr) return 10;
@@ -4127,7 +3821,6 @@
     },
 
     stat_upgrade(mon_PL) {
-
       if (mon_PL < 1300) return 17;
       if (mon_PL >= 1300 && mon_PL < 1431) return 18;
       if (mon_PL >= 1431 && mon_PL < 1560) return 19;
@@ -4140,19 +3833,15 @@
     },
 
     scaled_stat(base_m, upgrade_m, level_m) {
-
-
       return Math.floor(
         0.01 * level_m * (base_m + Math.min(Math.max(base_m / 10, 6), 10) * upgrade_m) +
-        Math.pow(level_m, 1.076675) * 0.3325,
+          Math.pow(level_m, 1.076675) * 0.3325,
       );
     },
 
     eff_HP(mon_ID, mon_HP, mon_HPNow, mon_LV, mon_imp) {
       var player_prof_factor = (cfgBattle.proficiencyInput - 500) / 500;
       var player_ELEM = cfgBattle.fightingStyle;
-
-
 
       var mon_race_base = {
         Arthropod: { STR: 80, DEX: 50, AGI: 70, END: 100, INT: 40, WIS: 40 },
@@ -4173,7 +3862,6 @@
       var mon_MMI = 0.8;
       var mon_EMI = 75;
       var mon_data = this.queryMonster(mon_ID);
-
 
       if (mon_data) {
         var mon_class = mon_data.monsterClass;
@@ -4259,7 +3947,6 @@
         let effturns = matches.groups.turns;
         let effstack = matches.groups.stack ?? 1;
 
-
         let isScroll = matches.groups.description.includes("(Scroll)");
         if (isScroll) {
           if (index < playerEffectsLength && effname) scrollEffectObj[effname] = effturns;
@@ -4267,7 +3954,6 @@
 
         if (index < playerEffectsLength && effname) stackEffectObj[effname] = effstack;
         if (index < playerEffectsLength && effname) playerEffectObj[effname] = effturns;
-
 
         if (render) {
           let durationContainer = document.createElement("div");
@@ -4287,10 +3973,6 @@
           }
 
           durationDiv.innerHTML = effturns;
-
-
-
-
 
           durationContainer.appendChild(durationDiv);
           effect.parentNode.insertBefore(durationContainer, effect);
@@ -4323,8 +4005,6 @@
             cooldown = 0;
             result[name] = 0;
           } else {
-
-
             let lastUse = timelog.lastUse[name] ?? -Infinity;
             let initCooldown = getInitlCooldown(matches) ?? 0;
             cooldown = lastUse + initCooldown - timelog.turn;
@@ -4334,14 +4014,12 @@
         return result;
       }
 
-
       let spellCooldowns = scan({
         selector: ".bts > div[onmouseover]",
         regexp: regExp.spellInfo,
         getName: (m) => m[1],
         getInitlCooldown: (m) => (m ? +m[5] : 0),
       });
-
 
       let itemCooldowns = scan({
         selector: ".bti3 > div",
@@ -4353,7 +4031,6 @@
       hvBH.spellCD = spellCooldowns;
       hvBH.itemCD = itemCooldowns;
     },
-
 
     getMonsters() {
       let monsters = [];
@@ -4382,7 +4059,6 @@
           monster_btm1: monster_btm1,
         };
 
-
         let monster_btm3 = monster_btm1.querySelector(".btm3");
         let nameContainer = monster_btm3.querySelector("div");
         monster.name = nameContainer.textContent.trim();
@@ -4391,11 +4067,9 @@
             monster.type = type;
             monster.isBoss = true;
 
-
             break;
           }
         }
-
 
         let monster_btm4 = monster_btm1.querySelector(".btm4");
         let healthBar = monster_btm4.querySelector('img[src$="nbargreen.png"]');
@@ -4409,7 +4083,6 @@
         monster.curhp = (monster.hp * monster.maxhp) / 100;
         monster.mid = hvBH.monsterData?.[index]?.mid ?? 0;
         monster.lv = hvBH.monsterData?.[index]?.level ?? 0;
-
 
         let monster_btm6 = monster_btm1.querySelector(".btm6");
         monster_btm6.querySelectorAll("img").forEach((effect) => {
@@ -4428,7 +4101,6 @@
         monster.ehp = MonsterDB.eff_HP(monster.mid, monster.maxhp, monster.curhp, monster.lv, mon_imp);
 
         monsters.push(monster);
-
       });
 
       let aliveMon = 0;
@@ -4470,9 +4142,7 @@
     },
 
     getAttackMode() {
-
       const matched = cfgBattle.attackModules?.find(([dungeon]) => hvBH.battleType === dungeon);
-
 
       hvBH.attackMode = matched?.[1] ?? cfgBattle.defaultAttackMode;
       hvBH.attackBossPriority = matched?.[2] ?? cfgBattle.defaultBossPriority;
@@ -4482,7 +4152,6 @@
       const monsters = hvBH.monsters;
       const monstersEffects = hvBH.monstersEffects;
       let activeMonsters = monsters.filter((m) => m.isAlive);
-
 
       function getEffectChanges(turnLog) {
         let effectsAdded = turnLog.matchAll(regExp.effectGain);
@@ -4496,7 +4165,6 @@
 
         return effectChanges;
       }
-
 
       function calcHiddenDelta(name, effectObj) {
         let savedEffects = monstersEffects[name];
@@ -4515,7 +4183,6 @@
 
         return maxDecrease;
       }
-
 
       function applyHiddenDelta(name, effectObj, delta) {
         if (!delta || delta <= 0) return;
@@ -4613,16 +4280,13 @@
         return key;
       }
 
-
       if (["hp", "mp", "sp", "oc", "ss"].includes(key)) {
         return Number(hvBH[key] ?? 0);
       }
 
-
       if (key.startsWith("isCD_")) {
         return Number(this.checkCD(key.slice(5)).cd);
       }
-
 
       if (key.startsWith("buff_")) {
         return this.getBuffTurns(key.slice(5));
@@ -4653,7 +4317,6 @@
       if (key == "T3D") return hvUtility.calculateMagicDamage("T3");
       if (key == "T4D") return hvUtility.calculateMagicDamage("T4");
 
-
       if (curMon) {
         if (key == "mon_curhp") return curMon.curhp;
         if (key == "mon_maxhp") return curMon.maxhp;
@@ -4662,7 +4325,6 @@
         if (key == "mon_sp") return curMon.sp;
         if (key == "mon_lv") return curMon.lv;
         if (key == "isBoss") return Number(curMon.isBoss);
-
 
         if (key.startsWith("debuff_")) {
           return this.getDebuffTurns(key.slice(7), curMon);
@@ -4677,7 +4339,6 @@
       return group.every(([key, op, rawRight]) => {
         const left = this.getContextValue(key, curMon);
         if (left === undefined) return false;
-
 
         const right = isNaN(rawRight) ? this.getContextValue(rawRight, curMon) : Number(rawRight);
 
@@ -4818,9 +4479,6 @@
   };
 
   const selectMonsterUtils = {
-
-
-
     getRange(center, range) {
       const half = Math.floor(range / 2);
       const left = range % 2 === 0 ? half : half;
@@ -4836,42 +4494,23 @@
       return reverse ? a.index > b.index : a.index < b.index;
     },
 
-
-
     betterWithMana(a, b, reverse) {
       if (!b) return true;
 
       const hasManaA = a?.effectObj?.["Coalesced Mana"] || false;
       const hasManaB = b?.effectObj?.["Coalesced Mana"] || false;
 
-
       if (hasManaA && !hasManaB) return true;
       if (!hasManaA && hasManaB) return false;
 
-
       return reverse ? a.index > b.index : a.index < b.index;
     },
-
-
-
 
     baseTarget(monsters) {
       let list = monsters.filter((m) => m.isAlive);
       if (list.length === 0) return null;
       const yggdrasil = monsters.find((m) => m.isAlive && m.name == "Yggdrasil");
       if (yggdrasil) return yggdrasil;
-
-
-
-
-
-
-
-
-
-
-
-
 
       if (hvBH.attackBossPriority) {
         const bosses = list.filter((m) => m.isBoss);
@@ -4889,13 +4528,9 @@
       return [...list].sort(sortMap[hvBH.attackMode] ?? sortMap.order)[0];
     },
 
-
-
-
     scanBestCenter(monsters, range, { mustCoverIndex = null, debuffName = null, reverse = false, turnsLeft = 0 } = {}) {
       let best = null;
       let bestScore = -1;
-
 
       const fightingStyle = cfgBattle.fightingStyle;
       const spells = spellsDamageObj[fightingStyle];
@@ -4944,16 +4579,12 @@
       return best;
     },
 
-
-
-
     selectMonster(range, debuffName = null, isAllRange = false, reverse = false, turnsLeft = 0) {
       const monsters = hvBH.monsters;
       if (!monsters?.length) return null;
 
       let alive = monsters.filter((m) => m.isAlive);
       if (!alive.length) return null;
-
 
       if (debuffName && isAllRange) {
         if (debuffName === "Sleep") {
@@ -4967,7 +4598,6 @@
           turnsLeft,
         });
       }
-
 
       const base = this.baseTarget(alive);
       if (!base || (debuffName && ConditionsUtils.getDebuffTurns(debuffName, base, true) >= turnsLeft)) {
@@ -4994,7 +4624,6 @@
       }
       return false;
     },
-
 
     Attack(monster) {
       readyNext = 0;
@@ -5133,9 +4762,6 @@
     },
   };
 
-
-
-
   function updateLogTitle() {
     const element = document.getElementById("bh-log-title");
     const Speed = (1000 / (Date.now() - hvBH.speedtime)).toFixed(2);
@@ -5172,16 +4798,11 @@
 
     timeRecorder(action, use);
 
-
     if (!isIsekai) {
-
-
       combatRecorder_isekai(turnLog, action, use);
     } else {
-
       combatRecorder_isekai(turnLog, action, use);
     }
-
 
     revenueRecorder(turnLog, action, use);
     updateLogTitle();
@@ -5237,7 +4858,6 @@
           const ikey = document.getElementById("ikey_p");
           if (ikey) ikey.remove();
         }
-
       }
     } else if (action.includes("Spirit Stance Engaged")) {
       Utils.inc(combatlog.used, "Spirit");
@@ -5274,11 +4894,9 @@
         let damagePoints = damage[i].match(regExp.damagePoints);
 
         if (damageType) {
-
           if (damage[i].includes("its you for")) {
             let crit = damage[i].includes(" crits ");
             let spiritShield = damage[i].match(regExp.spiritShield);
-
 
             if (damage[i].includes(" casts ")) {
               combatlog["magicalTaken"]["hit"] += 1;
@@ -5290,7 +4908,6 @@
                 if (crit) Utils.inc(combatlog.magicalTaken, "spiritShield" + "crit");
                 Utils.inc(combatlog.magicalTaken, "spiritShield" + damageType[2], +spiritShield[1]);
               }
-
             } else {
               combatlog["physicalTaken"]["hit"] += 1;
               crit && (combatlog["physicalTaken"]["crit"] += 1);
@@ -5302,9 +4919,7 @@
                 Utils.inc(combatlog.physicalTaken, "spiritShield" + damageType[2], +spiritShield[1]);
               }
             }
-
           } else {
-
             if (cast) {
               if (!damage[i].includes(" explodes ")) {
                 combatlog["magicalDealt"]["hit"] += 1;
@@ -5314,7 +4929,6 @@
                 }
               }
               Utils.inc(combatlog.magicalDealt, damageType[2], +damageType[1]);
-
             } else {
               if (!regExp.strike.test(damage[i])) {
                 combatlog["physicalDealt"]["hit"] += 1;
@@ -5328,25 +4942,15 @@
             }
           }
         } else if (damagePlus) {
-
-
-
           if (regExp.damagePhysicalPlus.test(damage[i])) {
             Utils.inc(combatlog.physicalDealt, "damagePlus", +damagePlus[1]);
-
-
-
           } else {
             Utils.inc(combatlog.magicalDealt, "damagePlus", +damagePlus[1]);
           }
         } else if (damagePoints) {
-
-
           if (damage[i].includes("You counter")) {
             combatlog["physicalDealt"]["hit"] += 1;
             Utils.inc(combatlog.physicalDealt, damagePoints[2], +damagePoints[1]);
-
-
           } else {
             Utils.inc(combatlog.magicalDealt, damagePoints[2], +damagePoints[1]);
           }
@@ -5366,12 +4970,9 @@
     combatlogFactory(regExp.magicalDealtResist90, "magicalDealt", "resist90");
     combatlogFactory(regExp.magicalDealtResist, "magicalDealt", "resist");
 
-
     combatlogFactory(regExp.physicalDealtMiss, "physicalDealt", "miss");
     combatlogFactory(regExp.physicalDealtEvade, "physicalDealt", "evade");
     combatlogFactory(regExp.physicalDealtParry, "physicalDealt", "parry");
-
-
 
     combatlogFactory(regExp.magicalTakenEvade, "magicalTaken", "evade");
     combatlogFactory(regExp.magicalTakenResist50, "magicalTaken", "resist50");
@@ -5380,12 +4981,10 @@
 
     combatlogFactory(regExp.magicalTakenBlock, "magicalTaken", "block");
 
-
     combatlogFactory(regExp.physicalTakenMiss, "physicalTaken", "miss");
     combatlogFactory(regExp.physicalTakenEvade, "physicalTaken", "evade");
     combatlogFactory(regExp.physicalTakenParry, "physicalTaken", "parry");
     combatlogFactory(regExp.physicalTakenBlock, "physicalTaken", "block");
-
 
     combatlogFactory(regExp.counter, "used", "Counter");
   }
@@ -5399,7 +4998,6 @@
           const ikey = document.getElementById("ikey_p");
           if (ikey) ikey.remove();
         }
-
       }
     } else if (action.includes("Spirit Stance Engaged")) {
       Utils.inc(combatlog.used, "Spirit");
@@ -5437,7 +5035,6 @@
         let damagePlus = damage[i].match(regExp.damagePlus_isekai);
         let damagePoints = damage[i].match(regExp.damagePoints_isekai);
 
-
         if (damageTaken?.groups) {
           let glance = damageTaken.groups["v"].includes("glance");
           let crit = damageTaken.groups["v"].includes("crit");
@@ -5449,7 +5046,6 @@
             hit && (combatlog["magicalTaken"]["hit"] += 1);
             crit && (combatlog["magicalTaken"]["crit"] += 1);
             Utils.inc(combatlog.magicalTaken, damageType, +damageTaken.groups["n"]);
-
           } else {
             glance && (combatlog["physicalTaken"]["glance"] += 1);
             hit && (combatlog["physicalTaken"]["hit"] += 1);
@@ -5459,7 +5055,6 @@
         } else if (spiritShield) {
           Utils.inc(combatlog.physicalTaken, "spiritShield" + "hit");
           Utils.inc(combatlog.physicalTaken, "spiritShield" + "damagePlus", +spiritShield[1]);
-
         } else if (damageDealt?.groups) {
           let glance = damageDealt.groups["v"].includes("glance");
           let crit = damageDealt.groups["v"].includes("crit");
@@ -5472,7 +5067,6 @@
             hit && (combatlog["magicalDealt"]["hit"] += 1);
             crit && (combatlog["magicalDealt"]["crit"] += 1);
             Utils.inc(combatlog.magicalDealt, damageType, +damageDealt.groups["n"]);
-
           } else {
             glance && (combatlog["physicalDealt"]["glance"] += 1);
             hit && (combatlog["physicalDealt"]["hit"] += 1);
@@ -5489,33 +5083,23 @@
           let damageType = Utils.lowerFirst(explode[2]);
           Utils.inc(combatlog.magicalDealt, damageType, +explode[1]);
         } else if (damagePlus) {
-
-
-
           if (regExp.damagePhysicalPlus_isekai.test(damage[i])) {
             Utils.inc(combatlog.physicalDealt, "damagePlus", +damagePlus[1]);
-
-
-
           } else {
             Utils.inc(combatlog.magicalDealt, "damagePlus", +damagePlus[1]);
           }
         } else if (damagePoints) {
           let damageType = Utils.lowerFirst(damagePoints[2]);
 
-
           if (damage[i].includes("You counter")) {
             combatlog["physicalDealt"]["hit"] += 1;
             Utils.inc(combatlog.physicalDealt, damageType, +damagePoints[1]);
-
-
           } else {
             Utils.inc(combatlog.magicalDealt, damageType, +damagePoints[1]);
           }
         }
       }
     }
-
 
     let debuffLog = turnLog.match(regExp.debuffLog_isekai)?.[0];
     if (debuffLog) {
@@ -5526,7 +5110,6 @@
       Utils.inc(combatlog.magicalDealt, "debuffResist1", debuffResist1);
       Utils.inc(combatlog.magicalDealt, "debuffResist3", debuffResist3);
     }
-
 
     let patchBlock = turnLog.match(/You block the attack\./g);
     if (patchBlock) Utils.inc(combatlog.magicalTaken, "block", -patchBlock.length);
@@ -5543,12 +5126,10 @@
     combatlogFactory(regExp.magicalDealtResistPartially_isekai, "magicalDealt", "resistPartially");
     combatlogFactory(regExp.magicalDealtResist_isekai, "magicalDealt", "resist");
 
-
     combatlogFactory(regExp.physicalDealtMiss_isekai, "physicalDealt", "miss");
     combatlogFactory(regExp.physicalDealtEvade_isekai, "physicalDealt", "evade");
     combatlogFactory(regExp.physicalDealtParryPartially_isekai, "physicalDealt", "parryPartially");
     combatlogFactory(regExp.physicalDealtParry_isekai, "physicalDealt", "parry");
-
 
     combatlogFactory(regExp.magicalTakenMiss_isekai, "magicalTaken", "miss");
     combatlogFactory(regExp.magicalTakenEvade_isekai, "magicalTaken", "evade");
@@ -5556,14 +5137,12 @@
     combatlogFactory(regExp.magicalTakenBlock_isekai, "magicalTaken", "block");
     combatlogFactory(regExp.magicalTakenResistPartially_isekai, "magicalTaken", "resistPartially");
 
-
     combatlogFactory(regExp.physicalTakenMiss_isekai, "physicalTaken", "miss");
     combatlogFactory(regExp.physicalTakenEvade_isekai, "physicalTaken", "evade");
     combatlogFactory(regExp.physicalTakenParryPartially_isekai, "physicalTaken", "parryPartially");
     combatlogFactory(regExp.physicalTakenParry_isekai, "physicalTaken", "parry");
     combatlogFactory(regExp.physicalTakenBlockPartially_isekai, "physicalTaken", "blockPartially");
     combatlogFactory(regExp.physicalTakenBlock_isekai, "physicalTaken", "block");
-
 
     combatlogFactory(regExp.counter_isekai, "used", "Counter");
   }
@@ -5576,11 +5155,6 @@
       !use.includes("Caffeinated Candy") &&
       !use.includes("Energy Drink")
     ) {
-
-
-
-
-
       combatlog.used[use] ??= 0;
       combatlog.used[use] += 1;
       Utils.inc(actionCounts, use);
@@ -5613,15 +5187,12 @@
     for (let dropLog of dropLogs) {
       let drop = dropLog.match(regExp.drop) || [];
       switch (drop[2]) {
-
         case "FF0000": {
           if (!drop[4]) {
             let quality = drop[3].match(regExp.quality)?.[1];
             if (quality) {
               droplog[quality] = (droplog[quality] ?? 0) + 1;
               droplog.Equips[drop[3]] = (droplog.Equips[drop[3]] ?? 0) + 1;
-
-
             } else {
               droplog.Material = (droplog.Material ?? 0) + (parseInt(drop[1]) || 1);
               Utils.inc(droplog.Mats, drop[3], parseInt(drop[1]) || 1);
@@ -5638,18 +5209,8 @@
           break;
         }
 
-
-
-
-
-
         case "00B000": {
           if (!drop[3].includes("Gem")) {
-
-
-
-
-
             droplog.Consumable = (droplog.Consumable ?? 0) + 1;
             droplog["Consumables"][drop[3]] ??= 0;
             droplog["Consumables"][drop[3]] += 1;
@@ -5657,16 +5218,12 @@
           break;
         }
 
-
         case "254117": {
           if (drop[3].includes("Blood")) {
-
             Utils.inc(droplog, "Blood");
           } else if (drop[3].includes("Chaos")) {
-
             Utils.inc(droplog, "Chaos");
           } else if (drop[3].includes("Soul")) {
-
             Utils.inc(droplog, "Soul", drop[1] === "five" ? 5 : +drop[1].match(/\d+/)?.[0] || 1);
           }
           break;
@@ -5690,17 +5247,10 @@
         }
 
         case "461B7E": {
-
           if (drop[3].includes("World Seed")) {
-
-
-
-
-
             droplog.Consumable = (droplog.Consumable ?? 0) + 1;
             droplog["Consumables"][drop[3]] ??= 0;
             droplog["Consumables"][drop[3]] += +drop[1].match(/\d+/)?.[0] || 1;
-
           } else {
             droplog.Trophy = (droplog.Trophy ?? 0) + 1;
             Utils.inc(droplog.Trophies, drop[3]);
@@ -5719,8 +5269,6 @@
       }
     }
   }
-
-
 
   function init() {
     window.addEventListener("beforeunload", storeTmp);
@@ -5794,11 +5342,9 @@
             results.push(`${id},${kValue}`);
           }
         } else {
-
           results.push("undefined,undefined");
         }
       } else {
-
         results.push("undefined,undefined");
       }
     });
@@ -5899,10 +5445,6 @@
         hvBH.battleType = "iw";
       } else if (battleTypeLog[1].includes("The Tower")) {
         hvBH.battleType = "tw";
-
-
-
-
       }
     }
     if (hvBH.battleType) {
@@ -5910,7 +5452,6 @@
     } else {
       hvBH.battleType = getBattle("battleType", "");
     }
-
 
     let round = log.innerHTML.match(regExp.round);
     if (round) {
@@ -5922,7 +5463,6 @@
       hvBH.curRound = getBattle("curRound", 1);
       hvBH.totalRound = getBattle("totalRound", 1);
     }
-
 
     let matches;
     hvBH.monsterData = [];
@@ -5942,9 +5482,7 @@
       hvBH.monsterData = getBattle("monsterData", []);
     }
 
-
     if (delayReload) clearTimeout(delayReload);
-
 
     if (!PauseBattle) {
       delayReload = setTimeout(function () {
@@ -5972,7 +5510,6 @@
       }
     }
 
-
     battleRecorder();
 
     let btcp = document.querySelector("#btcp");
@@ -5999,13 +5536,6 @@
         addStorageChangeListener(detail);
         GM_deleteValue(BATTLE_KEY);
         localStorage.removeItem(LOG_KEY);
-
-
-
-
-
-
-
       }
     }
 
@@ -6039,8 +5569,6 @@
       let finishBattle = document.querySelector('img[src$="finishbattle.png"]');
       if (hvBH.aliveMon <= 0) {
         if (cfgBattle.autoNextRound && btcp && !finishBattle) {
-
-
           PauseBattle = true;
           refreshPause();
 
@@ -6053,14 +5581,11 @@
               const html = await res.text();
               const doc = new DOMParser().parseFromString(html, "text/html");
 
-
               if (doc.getElementById("riddlemaster")) {
-
                 location.replace(location.href);
 
                 return;
               }
-
 
               const newMain = doc.getElementById("mainpane");
               const curMain = document.getElementById("mainpane");
@@ -6071,15 +5596,9 @@
 
               curMain.innerHTML = newMain.innerHTML;
 
-
               const script = document.createElement("script");
               script.type = "text/javascript";
               script.innerHTML = `battle = new Battle();`;
-
-
-
-
-
 
               curMain.appendChild(script);
 
@@ -6088,11 +5607,7 @@
               queueMicrotask(() => {
                 preBattle();
               });
-
-
-
             } catch (err) {
-
               console.log("error during round transition: code " + err);
             }
           };
@@ -6102,13 +5617,10 @@
         return;
       }
 
-
       switch (readyNext) {
         case -1:
-
           break;
         default:
-
           readyNext = -1;
           setTimeout(() => {
             smartBattle();
@@ -6127,7 +5639,6 @@
         T4: 0.73,
       };
 
-
       var base = multipliers[type] || multipliers.T3;
       const multiplier = Number(cfgBattle.multiplierInput);
       const mdb = Number(cfgBattle.mdbInput);
@@ -6135,7 +5646,6 @@
       const hath = Number(cfgBattle.hathInput);
       const tw = Number(cfgBattle.twInput);
       const riddleTurns = ConditionsUtils.getBuffTurns("Blessing of the RiddleMaster");
-
 
       var ponybuff = 1;
 
@@ -6150,19 +5660,18 @@
         base = 7.5;
       }
 
-      let SkillDamage =
-        Math.floor(multiplier * base * mdb * (1 + edb / 100) * (1 + hath) * (1 + tw) * 1.25 * ponybuff + T4Damage);
+      let SkillDamage = Math.floor(
+        multiplier * base * mdb * (1 + edb / 100) * (1 + hath) * (1 + tw) * 1.25 * ponybuff + T4Damage,
+      );
 
       return SkillDamage;
     },
 
     CalculatePartialimp(monstersInput, impDamage) {
-
       const monsters = monstersInput.map((m) => ({ ...m }));
 
       const monsterCount = monsters.length;
       const attackPlan = [];
-
 
       const isTarget = (m) => m.isAlive && m.ehp > impDamage && m.isImp == 0;
       const isNonTarget = (m) => m.isAlive && m.ehp <= impDamage && m.isImp == 0;
@@ -6190,7 +5699,6 @@
             }
           });
 
-
           if (monsters[i].isAlive && containsUncoveredTarget && score > bestScore) {
             bestScore = score;
             bestPoint = i;
@@ -6213,7 +5721,6 @@
     },
 
     CalculateAllimp(monstersInput) {
-
       const monsters = monstersInput.map((m) => ({ ...m }));
       const n = monsters.length;
       const result = [];
@@ -6261,8 +5768,6 @@
       return false;
     },
 
-
-
     handleModules(config) {
       return this.processModules(config, (moduleName, module) => {
         const cdInfo = ConditionsUtils.checkCD(moduleName);
@@ -6274,18 +5779,13 @@
       });
     },
 
-
-
     handleChannel(config) {
       if (!hvBH.playerEffectObj.Channeling) return false;
       return this.handleModules(config);
     },
 
-
-
     handleBuffs(config) {
       return this.processModules(config, (moduleName, module) => {
-
         if (ConditionsUtils.getBuffTurns(moduleName) >= 0) return false;
 
         const cdInfo = ConditionsUtils.checkCD(moduleName);
@@ -6299,7 +5799,6 @@
 
     handleScroll(config) {
       return this.processModules(config, (moduleName, module) => {
-
         if (ConditionsUtils.getScrollTurns(moduleName) >= 0) return false;
 
         const cdInfo = ConditionsUtils.checkCD(moduleName);
@@ -6310,8 +5809,6 @@
         return true;
       });
     },
-
-
 
     handleDebuff(config) {
       return this.processModules(config, (moduleName, module) => {
@@ -6338,7 +5835,6 @@
         if (LocalImperil) {
           const Selecttarget = this.LocalImperil();
           target = hvBH.monsters[Selecttarget];
-
         } else {
           target = selectMonsterUtils.selectMonster(range, moduleName, isAllRange, reverse, turnsLeft);
         }
@@ -6348,14 +5844,11 @@
       });
     },
 
-
-
     LocalImperil() {
       var T3Damage = hvUtility.calculateMagicDamage("T3") * Number(cfgBattle.damageCoeffInput);
       var resultPartialimp = hvUtility.CalculatePartialimp(hvBH.monsters, T3Damage);
       var resultAllimp = hvUtility.CalculateAllimp(hvBH.monsters);
       var Selecttarget = Math.min(...resultAllimp);
-
 
       if (resultPartialimp.length < resultAllimp.length) {
         Selecttarget = Math.min(...resultPartialimp);
@@ -6363,8 +5856,6 @@
 
       return Selecttarget;
     },
-
-
 
     handleSpiritstance(config) {
       return this.processModules(config, (moduleName, module) => {
@@ -6377,8 +5868,6 @@
         return true;
       });
     },
-
-
 
     handleSkills(config) {
       return this.processModules(config, (moduleName, module) => {
@@ -6394,14 +5883,11 @@
       });
     },
 
-
-
     handleAttack() {
       const fightingStyle = cfgBattle.fightingStyle;
       const spells = spellsDamageObj[fightingStyle];
 
       if (spells) {
-
         const staffCfg = cfgBattle.staff;
         if (staffCfg?.status && (hvBH.stackEffectObj["Ether Tap"] || 0) < 2) {
           for (const [moduleName, module] of Object.entries(staffCfg.modules)) {
